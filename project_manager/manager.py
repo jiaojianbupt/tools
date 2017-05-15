@@ -48,7 +48,8 @@ def add_alias():
     else:
         bash_profile_name = '.bashrc'
     linux_bash_profile_path = os.path.join(HOME, bash_profile_name)
-    alias = 'alias updateall="python %s "' % os.path.join((os.path.dirname(os.path.abspath(__file__)), 'main.py'))
+    exec_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'main.py')
+    alias = 'alias updateall="python %s "' % exec_file_path
     if os.path.exists(linux_bash_profile_path):
         with open(linux_bash_profile_path, 'rw') as bashrc_file:
             bash_profile = bashrc_file.read()
