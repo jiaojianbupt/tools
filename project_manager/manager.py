@@ -26,7 +26,7 @@ def prepare_args():
     parser.add_argument('-c', '--clean-dirty', action='store_true', help='Clean dirty changes.')
     parser.add_argument('-u', '--update-code', action='store_true', help='Update your code by "git pull -r".')
     parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
-    parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count(),
+    parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 4,
                         help='Concurrent process number.')
     args = parser.parse_args()
     return args
