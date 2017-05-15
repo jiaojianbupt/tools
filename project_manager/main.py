@@ -63,6 +63,8 @@ def main():
         text = 'Failed Repository'.center(80, '*')
         print_with_style(text, color=ConsoleColor.CYAN)
     for directory in failed_repos:
+        text = os.path.basename(directory).center(80, '-')
+        print_with_style(text, color=ConsoleColor.CYAN)
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
         print_with_style(text, color=ConsoleColor.RED, prefix=LogLevel.ERROR)
 
