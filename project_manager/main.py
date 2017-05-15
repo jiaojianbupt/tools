@@ -40,7 +40,6 @@ def main():
         print 'updating %s...' % os.path.basename(directory)
         async_results[directory] = process_pool.apply_async(update, args=(directory, args.clean_dirty),
                                                             callback=progress_monitor.increment)
-    print_with_style('\nfinished.')
     for directory in async_results:
         try:
             status, message = async_results[directory].get(timeout=args.timeout)
@@ -52,7 +51,7 @@ def main():
             failed_repos[directory] = message
         else:
             success_repos[directory] = message
-    text = '%s/%s updated.' % (len(success_repos), len(directories))
+    text = '\n%s/%s updated.' % (len(success_repos), len(directories))
     print_with_style(text, color=ConsoleColor.CYAN, prefix=LogLevel.INFO)
     for directory in failed_repos:
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
