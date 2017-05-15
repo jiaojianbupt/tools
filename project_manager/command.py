@@ -11,7 +11,11 @@ class Command(object):
 
 
 def update(path, clean_dirty):
-    cmd = 'cd %s && git pull -r' % path
+    cd_cmd = 'cd %s' % path
+    clean_cmd = 'git clean -fd && git reset --hard'
+    update_cmd = 'git pull -r'
     if clean_dirty:
-        cmd = 'git clean -fd && ' + cmd
+        cmd = ' && '.join((cd_cmd, clean_cmd, update_cmd))
+    else:
+        cmd = ' && '.join((cd_cmd, update_cmd))
     return commands.getstatusoutput(cmd)
