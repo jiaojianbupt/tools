@@ -51,7 +51,8 @@ def main():
             failed_repos[directory] = message
         else:
             success_repos[directory] = message
-    text = '\n%s/%s updated.' % (len(success_repos), len(directories))
+    print_with_style('')
+    text = '%s/%s updated.' % (len(success_repos), len(directories))
     print_with_style(text, color=ConsoleColor.CYAN, prefix=LogLevel.INFO)
     for directory in failed_repos:
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
