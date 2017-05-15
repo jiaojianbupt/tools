@@ -72,7 +72,7 @@ def add_alias():
 def manage():
     add_alias()
     args = prepare_args()
-    directories = collect()
+    directories = collect(path=args.directory)
     progress_monitor = ProgressMonitor(SafeCounter(), len(directories))
     async_results = {}
     success_repos = {}
