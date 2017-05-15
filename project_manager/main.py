@@ -36,10 +36,13 @@ def main():
     success_repos = {}
     failed_repos = {}
     process_pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    text = 'Running'.center(80, '*')
+    print_with_style(text, color=ConsoleColor.CYAN)
     for directory in directories:
         print 'updating %s...' % os.path.basename(directory)
         async_results[directory] = process_pool.apply_async(update, args=(directory, args.clean_dirty),
                                                             callback=progress_monitor.increment)
+
     for directory in async_results:
         try:
             status, message = async_results[directory].get(timeout=args.timeout)
@@ -51,9 +54,14 @@ def main():
             failed_repos[directory] = message
         else:
             success_repos[directory] = message
-    print_with_style('')
+    print_with_style('', color=ConsoleColor.GREEN)
+    text = 'Completed'.center(80, '*')
+    print_with_style(text, color=ConsoleColor.CYAN)
     text = '%s/%s updated.' % (len(success_repos), len(directories))
-    print_with_style(text, color=ConsoleColor.CYAN, prefix=LogLevel.INFO)
+    print_with_style(text, color=ConsoleColor.GREEN, prefix=LogLevel.INFO)
+    if failed_repos:
+        text = 'Failed Repository'.center(80, '*')
+        print_with_style(text, color=ConsoleColor.CYAN)
     for directory in failed_repos:
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
         print_with_style(text, color=ConsoleColor.RED, prefix=LogLevel.ERROR)
