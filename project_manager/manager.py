@@ -26,6 +26,8 @@ def prepare_args():
     parser.add_argument('-c', '--clean-dirty', action='store_true', help='Clean dirty changes.')
     parser.add_argument('-u', '--update-code', action='store_true', help='Update your code by "git pull -r".')
     parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
+    parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count(),
+                        help='Concurrent process number.')
     args = parser.parse_args()
     return args
 
@@ -77,7 +79,7 @@ def manage():
     async_results = {}
     success_repos = {}
     failed_repos = {}
-    process_pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    process_pool = multiprocessing.Pool(args.process_number)
     text = 'Running'.center(80, '*')
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
