@@ -4,6 +4,7 @@
 import os
 import sys
 import termios
+import time
 import argparse
 import multiprocessing
 from collector import collect
@@ -73,6 +74,7 @@ def add_alias():
 
 def manage():
     add_alias()
+    start_time = time.time()
     args = prepare_args()
     directories = collect(path=args.directory)
     progress_monitor = ProgressMonitor(SafeCounter(), len(directories))
@@ -111,3 +113,5 @@ def manage():
         print_with_style(text, color=ConsoleColor.CYAN, prefix='')
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
         print_with_style(text, color=ConsoleColor.RED, prefix=LogLevel.ERROR)
+    text = 'Finished in %.2fs.' % (time.time() - start_time)
+    print_with_style(text, color=ConsoleColor.CYAN)
