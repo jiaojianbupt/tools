@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 """
-import argparse
 import os
 import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+print sys.path
+import argparse
 import multiprocessing
 from collector import collect
 from command import update
@@ -30,14 +32,14 @@ def prepare_args():
 
 def main():
     args = prepare_args()
-    directories = collect(path='/home/jiaojian/repos')
+    directories = collect()
     progress_monitor = ProgressMonitor(SafeCounter(), len(directories))
     async_results = {}
     success_repos = {}
     failed_repos = {}
     process_pool = multiprocessing.Pool(multiprocessing.cpu_count())
     text = 'Running'.center(80, '*')
-    print_with_style(text, color=ConsoleColor.CYAN)
+    print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
         print 'updating %s...' % os.path.basename(directory)
         async_results[directory] = process_pool.apply_async(update, args=(directory, args.clean_dirty),
@@ -56,19 +58,19 @@ def main():
             success_repos[directory] = message
     print_with_style('', color=ConsoleColor.GREEN)
     text = 'Completed'.center(80, '*')
-    print_with_style(text, color=ConsoleColor.CYAN)
+    print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     text = '%s/%s updated.' % (len(success_repos), len(directories))
     print_with_style(text, color=ConsoleColor.GREEN, prefix=LogLevel.INFO)
     if failed_repos:
         text = 'Failed Repository'.center(80, '*')
-        print_with_style(text, color=ConsoleColor.CYAN)
+        print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in failed_repos:
         text = os.path.basename(directory).center(80, '-')
-        print_with_style(text, color=ConsoleColor.CYAN)
+        print_with_style(text, color=ConsoleColor.CYAN, prefix='')
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
         print_with_style(text, color=ConsoleColor.RED, prefix=LogLevel.ERROR)
 
 
 if __name__ == '__main__':
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
     main()
