@@ -10,6 +10,7 @@ import multiprocessing
 from collector import collect
 from command import update
 from model import ProgressMonitor
+from command import Command
 from tools.utils.counter import SafeCounter
 from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
 
@@ -24,7 +25,9 @@ HOME = os.environ['HOME']
 def prepare_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory', type=str, help='Target directory.')
-    parser.add_argument('-c', '--clean-dirty', action='store_true', help='Clean dirty.')
+    parser.add_argument('-c', '--clean-dirty', action='store_true',
+                        help='Clean dirty changes. If --auto-stash specified, this option will not work.')
+    parser.add_argument('-a', '--auto-stash', action='store_true', help='Auto stash.')
     parser.add_argument('-u', '--update-code', action='store_true', help='Update your code by "git pull -r".')
     parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
     parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 4,
@@ -82,11 +85,16 @@ def manage():
     success_repos = {}
     failed_repos = {}
     process_pool = multiprocessing.Pool(args.process_number)
+    command = Command.UPDATE
+    if args.auto_stash:
+        command = Command.AUTO_STASH
+    elif args.clean_dirty:
+        command = Command.CLEAN
     text = 'Running'.center(80, '*')
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
-        print 'updating %s...' % os.path.basename(directory)
-        async_results[directory] = process_pool.apply_async(update, args=(directory, args.clean_dirty),
+        print_with_style('updating %s...' % os.path.basename(directory))
+        async_results[directory] = process_pool.apply_async(update, args=(directory, command),
                                                             callback=progress_monitor.increment)
 
     for directory in async_results:
