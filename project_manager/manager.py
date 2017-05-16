@@ -122,4 +122,4 @@ def manage():
         text = '%s: %s\n%s' % (os.path.basename(directory), directory, failed_repos[directory])
         print_with_style(text, color=ConsoleColor.RED, prefix=LogLevel.ERROR)
     text = '%s repositories finished in %.2fs.' % (len(directories), time.time() - start_time)
-    print_with_style(text, color=ConsoleColor.CYAN)
+    print_with_style(text, color=ConsoleColor.GREEN)
