@@ -8,9 +8,9 @@ import time
 import argparse
 import multiprocessing
 from collector import collect
-from command import update
+from command import execute_command
 from model import ProgressMonitor
-from command import Command
+from command import Command, CommandMode
 from tools.utils.counter import SafeCounter
 from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
 
@@ -25,10 +25,11 @@ HOME = os.environ['HOME']
 def prepare_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory', type=str, help='Target directory.')
-    parser.add_argument('-c', '--clean-dirty', action='store_true',
+    parser.add_argument(CommandMode.CLEAN, '--clean-dirty', action='store_true',
                         help='Clean dirty changes. If --auto-stash specified, this option will not work.')
-    parser.add_argument('-a', '--auto-stash', action='store_true', help='Auto stash.')
-    parser.add_argument('-u', '--update-code', action='store_true', help='Update your code by "git pull -r".')
+    parser.add_argument(CommandMode.AUTO_STASH, '--auto-stash', action='store_true', help='Auto stash.')
+    parser.add_argument(Command.UPDATE, '--update-code', action='store_true', help='Update your code by "git pull -r".')
+    parser.add_argument(Command.STATUS, '--status', action='store_true', help='Show status.')
     parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
     parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 4,
                         help='Concurrent process number.')
@@ -86,15 +87,20 @@ def manage():
     failed_repos = {}
     process_pool = multiprocessing.Pool(args.process_number)
     command = Command.UPDATE
+    tips_text = 'updated'
+    if args.status:
+        command = Command.STATUS
+        tips_text = 'clean'
+    command_mode = CommandMode.NORMAL
     if args.auto_stash:
-        command = Command.AUTO_STASH
+        command_mode = CommandMode.AUTO_STASH
     elif args.clean_dirty:
-        command = Command.CLEAN
+        command_mode = CommandMode.CLEAN
     text = 'Running'.center(80, '*')
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
-        print_with_style('updating %s...' % os.path.basename(directory))
-        async_results[directory] = process_pool.apply_async(update, args=(directory, command),
+        print_with_style('running on %s...' % os.path.basename(directory))
+        async_results[directory] = process_pool.apply_async(execute_command, args=(directory, command, command_mode),
                                                             callback=progress_monitor.increment)
 
     for directory in async_results:
@@ -111,7 +117,7 @@ def manage():
     print_with_style('', color=ConsoleColor.GREEN)
     text = 'Completed'.center(80, '*')
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
-    text = '%s/%s updated.' % (len(success_repos), len(directories))
+    text = '%s/%s %s.' % (len(success_repos), len(directories), tips_text)
     print_with_style(text, color=ConsoleColor.GREEN, prefix=LogLevel.INFO)
     if failed_repos:
         text = 'Failed Repository'.center(80, '*')
