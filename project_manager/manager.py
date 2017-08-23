@@ -30,6 +30,7 @@ def prepare_args():
     parser.add_argument(CommandMode.AUTO_STASH, '--auto-stash', action='store_true', help='Auto stash.')
     parser.add_argument(Command.UPDATE, '--update-code', action='store_true', help='Update your code by "git pull -r".')
     parser.add_argument(Command.STATUS, '--status', action='store_true', help='Show status.')
+    parser.add_argument(Command.EXPORT, '--export', action='store_true', help='Export remote url of repositories.')
     parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
     parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 4,
                         help='Concurrent process number.')
@@ -91,6 +92,9 @@ def manage():
     if args.status:
         command = Command.STATUS
         tips_text = 'clean'
+    elif args.export:
+        command = Command.EXPORT
+        tips_text = 'exported'
     command_mode = CommandMode.NORMAL
     if args.auto_stash:
         command_mode = CommandMode.AUTO_STASH

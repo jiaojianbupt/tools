@@ -14,6 +14,7 @@ class Command(object):
 
     UPDATE = '-u'
     STATUS = '-s'
+    EXPORT = '-e'
 
 
 class CommandMode(object):
@@ -41,6 +42,28 @@ def execute_command(path, command=None, mode=None):
             message += '\nUntracked files:\n'
             message += '\n'.join(['\t%s' % i for i in untracked_files])
         return Status.ERROR, message
+    if command == Command.EXPORT:
+        return get_remote_url(path)
+
+
+def get_remote_url(path):
+    cd_cmd = 'cd %s' % path
+    remote_url = 'git config --get remote.origin.url'
+    status, message = commands.getstatusoutput(' && '.join((cd_cmd, remote_url)))
+    if not message.startswith('git@') or not message.startswith('ssh://'):
+        host, sub_path = message.split(':')
+        hostname = get_ssh_params(host, 'hostname')
+        port = get_ssh_params(host, 'port')
+        user = get_ssh_params(host, 'user')
+        print 'hostname: %s, user: %s' % (hostname, user)
+        message = 'ssh://%s@%s:%s%s' % (user, hostname, port, sub_path)
+    return status, message
+
+
+def get_ssh_params(host, param_name):
+    ssh_hostname = 'ssh -G %s | grep \'^%s \'' % (host, param_name)
+    message = commands.getoutput(ssh_hostname)
+    return message.split(' ')[1]
 
 
 def update(path, mode):
