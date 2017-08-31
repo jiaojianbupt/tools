@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 """
+import getpass
 import os
 import sys
 import termios
@@ -8,7 +9,7 @@ import time
 import argparse
 import multiprocessing
 from collector import collect
-from command import execute_command
+from command import execute_with_result
 from model import ProgressMonitor
 from command import Command, CommandMode
 from tools.utils.counter import SafeCounter
@@ -32,8 +33,12 @@ def prepare_args():
     parser.add_argument(Command.STATUS, '--status', action='store_true', help='Show status.')
     parser.add_argument(Command.EXPORT, '--export', action='store_true', help='Export remote url of repositories.')
     parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
-    parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 4,
+    parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 8,
                         help='Concurrent process number.')
+    parser.add_argument('--remote-host', type=str, help='Remote dev host.')
+    parser.add_argument('--user', type=str, help='User name for remote dev host.')
+    parser.add_argument('--local-root-path', type=str, help='Local root path for rsync.')
+    parser.add_argument('--remote-root-path', type=str, help='Remote root path for rsync.')
     args = parser.parse_args()
     return args
 
@@ -89,6 +94,7 @@ def manage():
     process_pool = multiprocessing.Pool(args.process_number)
     command = Command.UPDATE
     tips_text = 'updated'
+    user = args.user or getpass.getuser()
     if args.status:
         command = Command.STATUS
         tips_text = 'clean'
@@ -104,8 +110,8 @@ def manage():
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
         print_with_style('running on %s...' % os.path.basename(directory))
-        async_results[directory] = process_pool.apply_async(execute_command, args=(directory, command, command_mode),
-                                                            callback=progress_monitor.increment)
+        current_args = (directory, command, command_mode, user, args.remote_host, args.local_root_path, args.remote_root_path)
+        async_results[directory] = process_pool.apply_async(execute_with_result, args=current_args, callback=progress_monitor.increment)
 
     for directory in async_results:
         try:
