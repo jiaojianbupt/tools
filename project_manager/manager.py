@@ -17,7 +17,7 @@ from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
 
 
 STATUS_FAILED = 256
-TIMEOUT_MESSAGE = 'timeout.'
+TIMEOUT_MESSAGE = 'timed out.'
 STATUS_UNKNOWN = 256
 UNKNOWN_ERROR_TEMPLATE = 'Unknown exception: %s.'
 HOME = os.environ['HOME']
