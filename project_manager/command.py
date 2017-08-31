@@ -6,20 +6,17 @@ import os
 
 
 class Status(object):
-
     NORMAL = 0
     ERROR = 255
 
 
 class Command(object):
-
     UPDATE = '-u'
     STATUS = '-s'
     EXPORT = '-e'
 
 
 class CommandMode(object):
-
     NORMAL = '-n'
     CLEAN = '-c'
     AUTO_STASH = '-a'
@@ -65,7 +62,6 @@ class CommandExecutor(object):
             return self.get_remote_url()
         raise Exception('Unknown command %s' % self.command)
 
-
     def get_remote_url(self):
         cd_cmd = 'cd %s' % self.path
         remote_url = 'git config --get remote.origin.url'
@@ -79,15 +75,21 @@ class CommandExecutor(object):
             message = 'ssh://%s@%s:%s%s' % (user, hostname, port, sub_path)
         return status, message
 
-
     @staticmethod
     def get_ssh_params(host, param_name):
         ssh_hostname = 'ssh -G %s | grep \'^%s \'' % (host, param_name)
         message = commands.getoutput(ssh_hostname)
         return message.split(' ')[1]
 
-
     def update(self):
+        status = Status.ERROR
+        message = 'Unknown error.'
+        retry = 3
+        while status and retry > 0:
+            status, message = self._update()
+        return status, message
+
+    def _update(self):
         cd_cmd = 'cd %s' % self.path
         clean_cmd = 'git clean -fd && git reset --hard'
         update_cmd = 'git pull -r'
@@ -108,7 +110,6 @@ class CommandExecutor(object):
             cmd = ' && '.join((cmd, 'rsync -r --delete --force %s %s:%s' % (self.path, self.remote_host, remote_path)))
         return commands.getstatusoutput(cmd)
 
-
     def get_modified(self):
         cd_cmd = 'cd %s' % self.path
         modified_file_cmd = 'git diff --name-status'
@@ -116,7 +117,6 @@ class CommandExecutor(object):
         if not modified_files:
             return ''
         return modified_files.split('\n')
-
 
     def get_untracked(self):
         cd_cmd = 'cd %s' % self.path

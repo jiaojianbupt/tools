@@ -32,7 +32,7 @@ def prepare_args():
     parser.add_argument(Command.UPDATE, '--update-code', action='store_true', help='Update your code by "git pull -r".')
     parser.add_argument(Command.STATUS, '--status', action='store_true', help='Show status.')
     parser.add_argument(Command.EXPORT, '--export', action='store_true', help='Export remote url of repositories.')
-    parser.add_argument('-t', '--timeout', type=int, default=60, help='Timeout for update single repository.')
+    parser.add_argument('-t', '--timeout', type=int, default=120, help='Timeout for update single repository.')
     parser.add_argument('-p', '--process-number', type=int, default=multiprocessing.cpu_count() * 8,
                         help='Concurrent process number.')
     parser.add_argument('--remote-host', type=str, help='Remote dev host.')
@@ -91,7 +91,7 @@ def manage():
     async_results = {}
     success_repos = {}
     failed_repos = {}
-    process_pool = multiprocessing.Pool(args.process_number)
+    process_pool = multiprocessing.Pool(min(len(directories), args.process_number))
     command = Command.UPDATE
     tips_text = 'updated'
     user = args.user or getpass.getuser()
