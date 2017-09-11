@@ -105,10 +105,14 @@ class CommandExecutor(object):
             cmd = ' && '.join((cd_cmd, update_cmd))
 
         if self.user and self.remote_host:
+            cmd = ' && '.join((cmd, 'cd %s' % self.local_root_path))
             relative_path = os.path.relpath(self.path, self.local_root_path)
-            remote_path = os.path.dirname(os.path.join(self.remote_root_path, relative_path))
-            cmd = ' && '.join((cmd, 'rsync -r --delete --force %s %s:%s' % (self.path, self.remote_host, remote_path)))
-        return commands.getstatusoutput(cmd)
+            args = (relative_path, self.remote_host, self.remote_root_path)
+            cmd = ' && '.join((cmd, 'rsync -a -r --relative %s --delete --force %s:%s' % args))
+        print cmd
+        s, m = commands.getstatusoutput(cmd)
+        print m
+        return s, m
 
     def get_modified(self):
         cd_cmd = 'cd %s' % self.path

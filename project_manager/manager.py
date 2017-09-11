@@ -83,7 +83,7 @@ def add_alias():
 
 
 def manage():
-    add_alias()
+    # add_alias()
     start_time = time.time()
     args = prepare_args()
     directories = collect(path=args.directory)
