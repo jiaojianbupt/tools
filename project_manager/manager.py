@@ -26,6 +26,8 @@ HOME = os.environ['HOME']
 def prepare_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory', type=str, help='Target directory.')
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode.')
+    parser.add_argument('--exclude-directories', type=str, help='Exclude directories(absolute path).')
     parser.add_argument(CommandMode.CLEAN, '--clean-dirty', action='store_true',
                         help='Clean dirty changes. If --auto-stash specified, this option will not work.')
     parser.add_argument(CommandMode.AUTO_STASH, '--auto-stash', action='store_true', help='Auto stash.')
@@ -87,6 +89,10 @@ def manage():
     start_time = time.time()
     args = prepare_args()
     directories = collect(path=args.directory)
+    exclude_dirs = []
+    if args.exclude_directories:
+        exclude_dirs = args.exclude_directories.split(',')
+    directories = set(directories) - set(exclude_dirs)
     progress_monitor = ProgressMonitor(SafeCounter(), len(directories))
     async_results = {}
     success_repos = {}
@@ -110,7 +116,7 @@ def manage():
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
         print_with_style('running on %s...' % os.path.basename(directory))
-        current_args = (directory, command, command_mode, user, args.remote_host, args.local_root_path, args.remote_root_path)
+        current_args = (directory, command, command_mode, user, args.remote_host, args.local_root_path, args.remote_root_path, args.debug)
         async_results[directory] = process_pool.apply_async(execute_with_result, args=current_args, callback=progress_monitor.increment)
 
     for directory in async_results:

@@ -3,6 +3,7 @@
 """
 import commands
 import os
+from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
 
 
 class Status(object):
@@ -23,15 +24,15 @@ class CommandMode(object):
 
 
 def execute_with_result(path, command=None, mode=None, user=None, remote_host=None, local_root_path=None,
-                        remote_root_path=None):
+                        remote_root_path=None, is_debug=False):
     executor = CommandExecutor(path, command=command, mode=mode, user=user, remote_host=remote_host,
-                               local_root_path=local_root_path, remote_root_path=remote_root_path)
+                               local_root_path=local_root_path, remote_root_path=remote_root_path, is_debug=is_debug)
     return executor.execute_command()
 
 
 class CommandExecutor(object):
     def __init__(self, path, command=None, mode=None, user=None, remote_host=None, local_root_path=None,
-                 remote_root_path=None):
+                 remote_root_path=None, is_debug=False):
         self.path = path
         self.command = command
         self.mode = mode
@@ -41,6 +42,7 @@ class CommandExecutor(object):
             self.command = Command.UPDATE
         self.local_root_path = local_root_path
         self.remote_root_path = remote_root_path
+        self.is_debug = is_debug
 
     def execute_command(self):
         if self.command == Command.UPDATE:
@@ -65,7 +67,7 @@ class CommandExecutor(object):
     def get_remote_url(self):
         cd_cmd = 'cd %s' % self.path
         remote_url = 'git config --get remote.origin.url'
-        status, message = commands.getstatusoutput(' && '.join((cd_cmd, remote_url)))
+        status, message = self.getstatusoutput(' && '.join((cd_cmd, remote_url)))
         if not message.startswith('git@') or not message.startswith('ssh://'):
             host, sub_path = message.split(':')
             hostname = self.get_ssh_params(host, 'hostname')
@@ -75,10 +77,9 @@ class CommandExecutor(object):
             message = 'ssh://%s@%s:%s%s' % (user, hostname, port, sub_path)
         return status, message
 
-    @staticmethod
-    def get_ssh_params(host, param_name):
+    def get_ssh_params(self, host, param_name):
         ssh_hostname = 'ssh -G %s | grep \'^%s \'' % (host, param_name)
-        message = commands.getoutput(ssh_hostname)
+        message = self.getoutput(ssh_hostname)
         return message.split(' ')[1]
 
     def update(self):
@@ -96,7 +97,7 @@ class CommandExecutor(object):
         stash_cmd = 'git stash'
         stash_pop_cmd = 'git stash pop'
         diff_file_cmd = 'git diff --name-only'
-        diff_files = commands.getoutput(' && '.join((cd_cmd, diff_file_cmd)))
+        diff_files = self.getoutput(' && '.join((cd_cmd, diff_file_cmd)))
         if self.mode == CommandMode.CLEAN:
             cmd = ' && '.join((cd_cmd, clean_cmd, update_cmd))
         elif self.mode == CommandMode.AUTO_STASH and diff_files:
@@ -109,12 +110,12 @@ class CommandExecutor(object):
             relative_path = os.path.relpath(self.path, self.local_root_path)
             args = (relative_path, self.remote_host, self.remote_root_path)
             cmd = ' && '.join((cmd, 'rsync -a -r --relative %s --delete --force %s:%s' % args))
-        return commands.getstatusoutput(cmd)
+        return self.getstatusoutput(cmd)
 
     def get_modified(self):
         cd_cmd = 'cd %s' % self.path
         modified_file_cmd = 'git diff --name-status'
-        modified_files = commands.getoutput(' && '.join((cd_cmd, modified_file_cmd)))
+        modified_files = self.getoutput(' && '.join((cd_cmd, modified_file_cmd)))
         if not modified_files:
             return ''
         return modified_files.split('\n')
@@ -122,7 +123,22 @@ class CommandExecutor(object):
     def get_untracked(self):
         cd_cmd = 'cd %s' % self.path
         untracked_file_cmd = 'git ls-files --others --exclude-standard'
-        untracked_files = commands.getoutput(' && '.join((cd_cmd, untracked_file_cmd)))
+        untracked_files = self.getoutput(' && '.join((cd_cmd, untracked_file_cmd)))
         if not untracked_files:
             return ''
         return untracked_files.split('\n')
+
+    def getoutput(self, cmd):
+        return self.getstatusoutput(cmd)[1]
+
+    def getstatusoutput(self, cmd):
+        log_text_part = []
+        status, message = commands.getstatusoutput(cmd)
+        if self.is_debug:
+            log_text_part.append(('Host %s Debug Info Start' % self.remote_host).center(80, '-'))
+            log_text_part.append('Command: %s' % cmd)
+            log_text_part.append('Result: %s' % message)
+            log_text_part.append(('Host %s Debug Info End' % self.remote_host).center(80, '-'))
+            log_text = '\n'.join(log_text_part)
+            print_with_style(log_text, color=ConsoleColor.MAGENTA, prefix='')
+        return status, message
