@@ -47,8 +47,8 @@ def print_with_style(text, color=None, prefix=None, new_line=True, next_line=Fal
 def get_max_repr_length(targets):
     max_length = 0
     for t in targets:
-        if len(str(t)) > max_length:
-            max_length = len(str(t))
+        if len(safe_convert2str(t)) > max_length:
+            max_length = len(safe_convert2str(t))
     return max_length
 
 
@@ -57,7 +57,7 @@ def print_as_table(rows, split_first=True):
     for elements in rows:
         for element_index, element in enumerate(elements):
             max_length = max_length_dict.get(element_index, 0)
-            current_length = len(str(element))
+            current_length = len(safe_convert2str(element))
             if current_length > max_length:
                 max_length_dict[element_index] = current_length
 
@@ -71,11 +71,17 @@ def print_as_table(rows, split_first=True):
     for row_index, elements in enumerate(rows):
         text_part = left_border
         for element_index, element in enumerate(elements[:-1]):
-            text_part += str(element).ljust(max_length_dict[element_index]) + splitter
+            text_part += safe_convert2str(element).ljust(max_length_dict[element_index]) + splitter
 
-        text_part += str(elements[-1]).ljust(max_length_dict[len(elements) - 1]) + right_border
+        text_part += safe_convert2str(elements[-1]).ljust(max_length_dict[len(elements) - 1]) + right_border
         text_parts.append(text_part)
         if split_first and row_index == 0:
             text_parts.append(line_splitter)
     text_parts.append(line_splitter)
     return '\n'.join(text_parts)
+
+
+def safe_convert2str(target):
+    if not isinstance(target, (str, unicode)):
+        target = str(target)
+    return target
