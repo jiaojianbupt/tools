@@ -1,0 +1,15 @@
+#!/usr/bin/expect
+log_user 0
+set user [exec id -un]
+set remote_host [lindex $argv 0]
+
+if {[regexp {10\.100\.\d+.\d+} $remote_host]} {
+    set dev_host "10.100.6.206"
+} else {
+    set dev_host "10.101.6.18"
+}
+
+spawn ssh $user@$dev_host
+send "b tiger\r"
+send "ssh $remote_host\r"
+interact
