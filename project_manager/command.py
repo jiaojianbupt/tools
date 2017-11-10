@@ -3,6 +3,7 @@
 """
 import commands
 import os
+import time
 from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
 
 
@@ -15,6 +16,14 @@ class Command(object):
     UPDATE = '-u'
     STATUS = '-s'
     EXPORT = '-e'
+
+
+class CommandResult(object):
+    def __init__(self, status, message, cost, path):
+        self.status = status
+        self.message = message
+        self.cost = cost
+        self.path = path
 
 
 class CommandMode(object):
@@ -45,24 +54,35 @@ class CommandExecutor(object):
         self.is_debug = is_debug
 
     def execute_command(self):
+        start = time.time()
+        status, message = Status.ERROR, 'Unknown Error'
         if self.command == Command.UPDATE:
-            return self.update()
+            status, message = self.update()
         elif self.command == Command.STATUS:
             modified_files = self.get_modified()
             untracked_files = self.get_untracked()
             if not modified_files and not untracked_files:
-                return Status.NORMAL, None
-            message = ''
-            if modified_files:
-                message += 'Changes not staged for commit:\n'
-                message += '\n'.join(['\t%s' % i for i in modified_files])
-            if untracked_files:
-                message += '\nUntracked files:\n'
-                message += '\n'.join(['\t%s' % i for i in untracked_files])
-            return Status.ERROR, message
+                status, message = Status.NORMAL, None
+            else:
+                message = ''
+                if modified_files:
+                    message += 'Changes not staged for commit:\n'
+                    message += '\n'.join(['\t%s' % i for i in modified_files])
+                if untracked_files:
+                    message += '\nUntracked files:\n'
+                    message += '\n'.join(['\t%s' % i for i in untracked_files])
+                status, message = Status.ERROR, message
         elif self.command == Command.EXPORT:
-            return self.get_remote_url()
-        raise Exception('Unknown command %s' % self.command)
+            status, message = self.get_remote_url()
+        else:
+            raise Exception('Unknown command %s' % self.command)
+        result = CommandResult(
+            status=status,
+            message=message,
+            cost=time.time() - start,
+            path=self.path
+        )
+        return result
 
     def get_remote_url(self):
         cd_cmd = 'cd %s' % self.path

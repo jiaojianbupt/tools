@@ -10,11 +10,11 @@ class ProgressMonitor(object):
         self.counter = counter
         self.total = total
 
-    def increment(self, *args, **kwargs):
-        _, _ = args, kwargs
+    def increment(self, result):
         self.counter.increment()
-        self.update_display_text()
+        self.update_display_text(result)
 
-    def update_display_text(self):
-        print_with_style('progress: %s/%s' % (self.counter.get_value(), self.total), color=ConsoleColor.GREEN,
+    def update_display_text(self, result):
+        text = 'progress: %s/%s, %s finished in %s seconds.' % (self.counter.get_value(), self.total, result.path, result.cost)
+        print_with_style(text, color=ConsoleColor.GREEN,
                          new_line=False, prefix=LogLevel.INFO)

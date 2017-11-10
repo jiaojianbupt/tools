@@ -121,11 +121,12 @@ def manage():
 
     for directory in async_results:
         try:
-            status, message = async_results[directory].get(timeout=args.timeout)
+            result = async_results[directory].get(timeout=args.timeout)
+            status, message, cost = result.status, result.message, result.cost
         except multiprocessing.TimeoutError:
-            status, message = STATUS_FAILED, TIMEOUT_MESSAGE
+            status, message, cost = STATUS_FAILED, TIMEOUT_MESSAGE, args.timeout
         except Exception as e:
-            status, message = STATUS_UNKNOWN, UNKNOWN_ERROR_TEMPLATE % e.message
+            status, message, cost = STATUS_UNKNOWN, UNKNOWN_ERROR_TEMPLATE % e.message, None
         if status:
             failed_repos[directory] = message
         else:
