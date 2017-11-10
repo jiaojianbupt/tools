@@ -89,11 +89,12 @@ def manage():
     start_time = time.time()
     args = prepare_args()
     directories = collect(path=args.directory)
+    max_dir_length = max([len(i) for i in directories])
     exclude_dirs = []
     if args.exclude_directories:
         exclude_dirs = args.exclude_directories.split(',')
     directories = set(directories) - set(exclude_dirs)
-    progress_monitor = ProgressMonitor(SafeCounter(), len(directories))
+    progress_monitor = ProgressMonitor(SafeCounter(), len(directories), max_dir_length)
     async_results = {}
     success_repos = {}
     failed_repos = {}
