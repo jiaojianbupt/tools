@@ -7,7 +7,7 @@ import time
 from tools.utils.printer import print_with_style, ConsoleColor
 
 
-FATAL_ERROR_KEYWORDS = {'rebase', 'conflict', 'fatal', 'error'}
+FATAL_ERROR_KEYWORDS = {'rebase', 'conflict', 'fatal'}
 
 
 class Status(object):

@@ -20,6 +20,8 @@ from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
 STATUS_FAILED = 256
 TIMEOUT_MESSAGE = 'timed out.'
 STATUS_UNKNOWN = 256
+MESSAGE_REFRESH_INTERVAL = 5
+SLOW_THRESHOLD = 5
 UNKNOWN_ERROR_TEMPLATE = 'Unknown exception: %s.'
 HOME = os.environ['HOME']
 
@@ -129,13 +131,15 @@ def manage():
 
     for directory in async_results:
         start = time.time()
-        while time.time() - start < args.timeout:
+        last_update = start
+        current_time = start
+        while time.time() - start < args.timeout and not async_results[directory].ready():
             async_results[directory].wait(0.1)
-            cost = time.time() - start
-            if cost > 5:
+            cost = current_time - start
+            if cost > SLOW_THRESHOLD and current_time - last_update > MESSAGE_REFRESH_INTERVAL:
+                last_update = current_time
                 progress_monitor.update_display_text(directory, cost, too_slow=True)
-            if async_results[directory].ready():
-                break
+            current_time = time.time()
         try:
             result = async_results[directory].get(timeout=0.1)
             status, message, cost = result.status, result.message, result.cost
@@ -147,6 +151,7 @@ def manage():
             failed_repos[directory] = message
         else:
             success_repos[directory] = message
+
     print_with_style('', color=ConsoleColor.GREEN)
     text = 'Completed'.center(80, '*')
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
