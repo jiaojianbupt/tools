@@ -13,10 +13,15 @@ class ProgressMonitor(object):
 
     def increment(self, result):
         self.counter.increment()
-        self.update_display_text(result)
+        self.update_display_text(result.path, result.cost)
 
-    def update_display_text(self, result):
-        path = result.path.ljust(self.max_path_length)
-        text = 'progress: %s/%s, %s finished in %.2f seconds.' % (self.counter.get_value(), self.total, path, result.cost)
+    def update_display_text(self, path, cost, too_slow=False):
+        path = path.ljust(self.max_path_length)
+        progress_text = 'progress: %s/%s' % (self.counter.get_value(), self.total)
+        if too_slow:
+            text = '%s, still processing %s. ' % (progress_text, path)
+        else:
+            text = '%s, %s finished in %.2f seconds. ' % (progress_text, path, cost)
+        text = text.ljust(120)
         print_with_style(text, color=ConsoleColor.GREEN,
                          new_line=False, prefix=LogLevel.INFO)

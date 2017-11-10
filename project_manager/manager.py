@@ -3,6 +3,7 @@
 """
 import getpass
 import os
+import signal
 import sys
 import termios
 import time
@@ -84,6 +85,10 @@ def add_alias():
             print_with_style('Alias added.', color=ConsoleColor.YELLOW)
 
 
+def init_worker():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 def manage():
     # add_alias()
     start_time = time.time()
@@ -98,7 +103,7 @@ def manage():
     async_results = {}
     success_repos = {}
     failed_repos = {}
-    process_pool = multiprocessing.Pool(min(len(directories), args.process_number))
+    process_pool = multiprocessing.Pool(min(len(directories), args.process_number), init_worker)
     command = Command.UPDATE
     tips_text = 'updated'
     user = args.user or getpass.getuser()
@@ -117,12 +122,22 @@ def manage():
     print_with_style(text, color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
         print_with_style('running on %s...' % os.path.basename(directory))
-        current_args = (directory, command, command_mode, user, args.remote_host, args.local_root_path, args.remote_root_path, args.debug)
-        async_results[directory] = process_pool.apply_async(execute_with_result, args=current_args, callback=progress_monitor.increment)
+        current_args = (directory, command, command_mode, user, args.remote_host, args.local_root_path,
+                        args.remote_root_path, args.debug)
+        async_results[directory] = process_pool.apply_async(execute_with_result, args=current_args,
+                                                            callback=progress_monitor.increment)
 
     for directory in async_results:
+        start = time.time()
+        while time.time() - start < args.timeout:
+            async_results[directory].wait(0.1)
+            cost = time.time() - start
+            if cost > 5:
+                progress_monitor.update_display_text(directory, cost, too_slow=True)
+            if async_results[directory].ready():
+                break
         try:
-            result = async_results[directory].get(timeout=args.timeout)
+            result = async_results[directory].get(timeout=0.1)
             status, message, cost = result.status, result.message, result.cost
         except multiprocessing.TimeoutError:
             status, message, cost = STATUS_FAILED, TIMEOUT_MESSAGE, args.timeout

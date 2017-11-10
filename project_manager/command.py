@@ -55,7 +55,6 @@ class CommandExecutor(object):
 
     def execute_command(self):
         start = time.time()
-        status, message = Status.ERROR, 'Unknown Error'
         if self.command == Command.UPDATE:
             status, message = self.update()
         elif self.command == Command.STATUS:
