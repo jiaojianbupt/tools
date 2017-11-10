@@ -118,6 +118,8 @@ class CommandExecutor(object):
         stash_pop_cmd = 'git stash pop'
         diff_file_cmd = 'git diff --name-only'
         diff_files = self.getoutput(' && '.join((cd_cmd, diff_file_cmd)))
+        current_branch = self.get_current_branch()
+
         if self.mode == CommandMode.CLEAN:
             cmd = ' && '.join((cd_cmd, clean_cmd, update_cmd))
         elif self.mode == CommandMode.AUTO_STASH and diff_files:
@@ -125,11 +127,15 @@ class CommandExecutor(object):
         else:
             cmd = ' && '.join((cd_cmd, update_cmd))
 
+        if current_branch != 'master':
+            cmd = '&& '.join(('git checkout master', cmd, 'git checkout %s' % current_branch))
+
         if self.user and self.remote_host:
             cmd = ' && '.join((cmd, 'cd %s' % self.local_root_path))
             relative_path = os.path.relpath(self.path, self.local_root_path)
             args = (relative_path, self.remote_host, self.remote_root_path)
             cmd = ' && '.join((cmd, 'rsync -a -r --relative %s --delete --force %s:%s' % args))
+
         return self.getstatusoutput(cmd)
 
     def get_modified(self):
@@ -147,6 +153,12 @@ class CommandExecutor(object):
         if not untracked_files:
             return ''
         return untracked_files.split('\n')
+
+    def get_current_branch(self):
+        cd_cmd = 'cd %s' % self.path
+        current_branch_cmd = 'git rev-parse --abbrev-ref HEAD'
+        current_branch = self.getoutput(' && '.join((cd_cmd, current_branch_cmd)))
+        return current_branch
 
     def getoutput(self, cmd):
         return self.getstatusoutput(cmd)[1]
