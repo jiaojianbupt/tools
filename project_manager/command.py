@@ -4,7 +4,10 @@
 import commands
 import os
 import time
-from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
+from tools.utils.printer import print_with_style, ConsoleColor
+
+
+FATAL_ERROR_KEYWORDS = {'rebase', 'conflict', 'fatal', 'error'}
 
 
 class Status(object):
@@ -107,6 +110,15 @@ class CommandExecutor(object):
         retry = 3
         while status and retry > 0:
             status, message = self._update()
+            if message:
+                stop_retry = False
+                message_lower = message.lower()
+                for keyword in FATAL_ERROR_KEYWORDS:
+                    if keyword in message_lower and status:
+                        stop_retry = True
+                        break
+                if stop_retry:
+                    break
         return status, message
 
     def _update(self):
