@@ -121,14 +121,16 @@ class CommandExecutor(object):
         current_branch = self.get_current_branch()
 
         if self.mode == CommandMode.CLEAN:
-            cmd = ' && '.join((cd_cmd, clean_cmd, update_cmd))
+            cmd = ' && '.join((clean_cmd, update_cmd))
         elif self.mode == CommandMode.AUTO_STASH and diff_files:
-            cmd = ' && '.join((cd_cmd, stash_cmd, update_cmd, stash_pop_cmd))
+            cmd = ' && '.join((stash_cmd, update_cmd, stash_pop_cmd))
         else:
-            cmd = ' && '.join((cd_cmd, update_cmd))
+            cmd = update_cmd
 
         if current_branch != 'master':
-            cmd = '&& '.join(('git checkout master', cmd, 'git checkout %s' % current_branch))
+            cmd = ' && '.join(('git checkout master', cmd, 'git checkout %s' % current_branch))
+
+        cmd = ' && '.join((cd_cmd, cmd))
 
         if self.user and self.remote_host:
             cmd = ' && '.join((cmd, 'cd %s' % self.local_root_path))
