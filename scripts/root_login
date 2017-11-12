@@ -3,10 +3,10 @@ log_user 0
 set user [exec id -un]
 set ip [lindex $argv 0]
 
-if {[regexp {10\.100\.\d+.\d+} $ip]} {
-    set dev_host ""
+if {[regexp "$env(VA_PATTERN)" $ip]} {
+    set dev_host "$env(VA_DEV)"
 } else {
-    set dev_host ""
+    set dev_host "$env(SG_DEV)"
 }
 
 spawn ssh $user@$dev_host
