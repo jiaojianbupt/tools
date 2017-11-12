@@ -146,8 +146,8 @@ class CommandExecutor(object):
         if self.user and self.remote_host:
             cmd = ' && '.join((cmd, 'cd %s' % self.local_root_path))
             relative_path = os.path.relpath(self.path, self.local_root_path)
-            args = (relative_path, self.remote_host, self.remote_root_path)
-            cmd = ' && '.join((cmd, 'rsync -a -r --relative %s --delete --force %s:%s' % args))
+            args = (relative_path, self.user, self.remote_host, self.remote_root_path)
+            cmd = ' && '.join((cmd, 'rsync -a -r --relative %s --delete --force %s@%s:%s' % args))
 
         return self.getstatusoutput(cmd)
 
