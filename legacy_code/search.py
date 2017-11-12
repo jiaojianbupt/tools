@@ -89,17 +89,3 @@ def _get_check_points(start, end, n):
         check_points.append(start + i * distance)
     check_points.append(end)
     return check_points
-
-
-def main():
-    s3_file = S3ObjectSequence('bytedance-root', 'user/wudi/event_param_test_4_20170101_compact6.sort2.bin', 12)
-    target_collection = [3 for i in range(40000)]
-    for _ in range(100):
-        target_collection.insert(0, 1)
-    n_search(2, 6362894245031707139, s3_file, compare_type=CompareType.GE)
-    for n in range(2, 20):
-        print n, n_search(n, 6362894245031707139, s3_file, compare_type=CompareType.GE)
-
-
-if __name__ == '__main__':
-    main()

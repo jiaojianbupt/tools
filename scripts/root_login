@@ -4,9 +4,9 @@ set user [exec id -un]
 set ip [lindex $argv 0]
 
 if {[regexp {10\.100\.\d+.\d+} $ip]} {
-    set dev_host "10.100.6.206"
+    set dev_host ""
 } else {
-    set dev_host "10.101.6.18"
+    set dev_host ""
 }
 
 spawn ssh $user@$dev_host
