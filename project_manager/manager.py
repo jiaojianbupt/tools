@@ -14,7 +14,7 @@ from command import execute_with_result
 from model import ProgressMonitor
 from command import Command, CommandMode
 from tools.utils.counter import SafeCounter
-from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
+from tools.utils.basic_printer import print_with_style, LogLevel, ConsoleColor
 
 
 STATUS_FAILED = 256

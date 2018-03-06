@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 """
-from tools.utils.printer import print_with_style, LogLevel, ConsoleColor
+from tools.utils.basic_printer import print_with_style, LogLevel, ConsoleColor
 
 
 class ProgressMonitor(object):

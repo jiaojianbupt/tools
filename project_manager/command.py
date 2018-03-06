@@ -4,7 +4,7 @@
 import commands
 import os
 import time
-from tools.utils.printer import print_with_style, ConsoleColor
+from tools.utils.basic_printer import print_with_style, ConsoleColor
 
 
 FATAL_ERROR_KEYWORDS = {'rebase', 'conflict', 'fatal'}
