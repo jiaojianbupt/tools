@@ -10,6 +10,24 @@ go_local_path="~/go"
 go_remote_path="go"
 go_exclude_path="$go_local_path/src/github.com/gin-gonic/gin,$go_local_path/src/code.byted.org/kite/kitool"
 
+source ${PROJECT_MANAGER_PATH}/conf.local
+if [ -n "${PYTHON_LOCAL_REPOS}" ]
+then
+    python_local_path="${PYTHON_LOCAL_REPOS}"
+fi
+if [ -n "${PYTHON_REMOTE_REPOS}" ]
+then
+    python_remote_path="${PYTHON_REMOTE_REPOS}"
+fi
+if [ -n "${GO_LOCAL_REPOS}" ]
+then
+    go_local_path="${GO_LOCAL_REPOS}"
+fi
+if [ -n "${GO_REMOTE_REPOS}" ]
+then
+    go_remote_path="${GO_REMOTE_REPOS}"
+fi
+
 local_path=""
 remote_path=""
 exclude_path=""
