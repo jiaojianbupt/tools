@@ -1,3 +1,4 @@
+# Create your own conf.local from this template.
 CN_DEV=0.0.0.0
 VA_DEV=0.0.0.0
 ALIVA_DEV=0.0.0.0
