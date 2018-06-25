@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export PROJECT_MANAGER_PATH=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
+export PROJECT_MANAGER_PATH=$(cd "$( dirname "${BASH_SOURCE[0]-$0}" )" && pwd)
 update_repos(){
      echo `${PROJECT_MANAGER_PATH}/default_generate.sh $1 $2`
 }
