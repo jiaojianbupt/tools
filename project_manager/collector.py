@@ -27,7 +27,7 @@ def find_directories(path, results=None):
 
 
 def main():
-    print len(collect(path='/home/jiaojian/repos'))
+    print len(collect(path='/Users/jiaojian/repos'))
 
 
 if __name__ == '__main__':

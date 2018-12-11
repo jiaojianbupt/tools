@@ -2,12 +2,7 @@
 log_user 0
 set user [exec id -un]
 set remote_host [lindex $argv 0]
-
-if {[regexp "$env(VA_PATTERN)" $remote_host]} {
-    set dev_host "$env(VA_DEV)"
-} else {
-    set dev_host "$env(SG_DEV)"
-}
+set dev_host "$env(CN_DEV)"
 
 spawn ssh $user@$dev_host
 send "b tiger\r"

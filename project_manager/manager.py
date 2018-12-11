@@ -48,80 +48,19 @@ def prepare_args():
     return args
 
 
-def get_input():
-    fd = sys.stdin.fileno()
-    old_tty_info = termios.tcgetattr(fd)
-    new_tty_info = old_tty_info[:]
-    new_tty_info[3] &= ~termios.ICANON
-    new_tty_info[3] &= ~termios.ECHO
-    termios.tcsetattr(fd, termios.TCSANOW, new_tty_info)
-    answer = os.read(fd, 1)
-    termios.tcsetattr(fd, termios.TCSANOW, old_tty_info)
-    return answer
-
-
-def add_alias():
-    if sys.platform == 'darwin':
-        bash_profile_name = '.bash_profile'
-    else:
-        bash_profile_name = '.bashrc'
-    linux_bash_profile_path = os.path.join(HOME, bash_profile_name)
-    exec_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'main.py')
-    alias = 'alias updateall="python %s"' % exec_file_path
-    if os.path.exists(linux_bash_profile_path):
-        with open(linux_bash_profile_path, 'rw') as bashrc_file:
-            bash_profile = bashrc_file.read()
-            if bash_profile.find(alias) >= 0:
-                return
-            answer = ''
-            while not answer or answer not in {'y', 'n'}:
-                print_with_style('Add \'%s\' to your %s?(y/n)' % (alias, bash_profile_name), color=ConsoleColor.YELLOW)
-                answer = get_input()
-                if answer == 'n':
-                    return
-                elif answer == 'y':
-                    break
-            bash_profile = bash_profile + '\n' + alias
-        with open(linux_bash_profile_path, 'w') as bashrc_file:
-            bashrc_file.write(bash_profile)
-            print_with_style('Alias added.', color=ConsoleColor.YELLOW)
-
-
 def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def manage():
-    # add_alias()
+def concurrent_run(directories, command, command_mode, args, tips_text, user):
     start_time = time.time()
-    args = prepare_args()
-    directories = collect(path=args.directory)
-    max_dir_length = max([len(i) for i in directories])
-    exclude_dirs = []
-    if args.exclude_directories:
-        exclude_dirs = args.exclude_directories.split(',')
-    directories = set(directories) - set(exclude_dirs)
-    progress_monitor = ProgressMonitor(SafeCounter(), len(directories), max_dir_length)
     async_results = {}
     success_repos = {}
     failed_repos = {}
+    max_dir_length = max([len(i) for i in directories])
+    progress_monitor = ProgressMonitor(SafeCounter(), len(directories), max_dir_length)
     process_pool = multiprocessing.Pool(min(len(directories), args.process_number), init_worker)
-    command = Command.UPDATE
-    tips_text = 'updated'
-    user = args.user or getpass.getuser()
-    if args.status:
-        command = Command.STATUS
-        tips_text = 'clean'
-    elif args.export:
-        command = Command.EXPORT
-        tips_text = 'exported'
-    command_mode = CommandMode.NORMAL
-    if args.auto_stash:
-        command_mode = CommandMode.AUTO_STASH
-    elif args.clean_dirty:
-        command_mode = CommandMode.CLEAN
-    text = 'Running'.center(80, '*')
-    print_with_style(text, color=ConsoleColor.CYAN, prefix='')
+    print_with_style('Running'.center(80, '*'), color=ConsoleColor.CYAN, prefix='')
     for directory in directories:
         print_with_style('running on %s...' % os.path.basename(directory))
         current_args = (directory, command, command_mode, user, args.remote_host, args.local_root_path,
@@ -167,3 +106,31 @@ def manage():
         print_with_style(text, color=ConsoleColor.RED, prefix=LogLevel.ERROR)
     text = '%s repositories finished in %.2fs.' % (len(directories), time.time() - start_time)
     print_with_style(text, color=ConsoleColor.GREEN)
+    return success_repos, failed_repos
+
+
+def manage():
+    # add_alias()
+    args = prepare_args()
+    directories = collect(path=args.directory)
+    exclude_dirs = []
+    if args.exclude_directories:
+        exclude_dirs = args.exclude_directories.split(',')
+    directories = set(directories) - set(exclude_dirs)
+
+    command = Command.UPDATE
+    tips_text = 'updated'
+    user = args.user or getpass.getuser()
+    if args.status:
+        command = Command.STATUS
+        tips_text = 'clean'
+    elif args.export:
+        command = Command.EXPORT
+        tips_text = 'exported'
+    command_mode = CommandMode.NORMAL
+    if args.auto_stash:
+        command_mode = CommandMode.AUTO_STASH
+    elif args.clean_dirty:
+        command_mode = CommandMode.CLEAN
+    success_repos, failed_repos = concurrent_run(directories, command, command_mode, args, tips_text, user)
+    print success_repos

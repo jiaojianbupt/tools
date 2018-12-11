@@ -90,13 +90,6 @@ class CommandExecutor(object):
         cd_cmd = 'cd %s' % self.path
         remote_url = 'git config --get remote.origin.url'
         status, message = self.getstatusoutput(' && '.join((cd_cmd, remote_url)))
-        if not message.startswith('git@') or not message.startswith('ssh://'):
-            host, sub_path = message.split(':')
-            hostname = self.get_ssh_params(host, 'hostname')
-            port = self.get_ssh_params(host, 'port')
-            user = self.get_ssh_params(host, 'user')
-            print 'hostname: %s, user: %s' % (hostname, user)
-            message = 'ssh://%s@%s:%s%s' % (user, hostname, port, sub_path)
         return status, message
 
     def get_ssh_params(self, host, param_name):
