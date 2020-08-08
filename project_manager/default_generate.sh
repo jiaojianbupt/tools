@@ -8,7 +8,7 @@ python_remote_path="repos"
 python_exclude_path=""
 go_local_path="~/go"
 go_remote_path="go"
-go_exclude_path="$go_local_path/src/github.com/gin-gonic/gin,$go_local_path/src/code.byted.org/kite/kitool"
+go_exclude_path=""
 
 source ${PROJECT_MANAGER_PATH}/conf.local
 if [ -n "${PYTHON_LOCAL_REPOS}" ]
